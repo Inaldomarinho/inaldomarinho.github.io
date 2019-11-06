@@ -432,9 +432,20 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
+<li><a href="#_unidade_1">Unidade 1</a>
+<ul class="sectlevel2">
 <li><a href="#_manipulando_pixels_em_uma_imagem">Manipulando pixels em uma imagem</a></li>
 <li><a href="#_preenchendo_regiões">Preenchendo regiões</a></li>
 <li><a href="#_manipulação_de_histogramas">Manipulação de histogramas</a></li>
+<li><a href="#_filtragem_no_domínio_espacial_i">Filtragem no domínio espacial I</a></li>
+</ul>
+</li>
+<li><a href="#_unidade_2">Unidade 2</a>
+<ul class="sectlevel2">
+<li><a href="#_filtragem_no_domínio_da_frequência">Filtragem no domínio da frequência</a></li>
+<li><a href="#_pontilhismo">Pontilhismo</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -447,8 +458,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="sect1">
-<h2 id="_manipulando_pixels_em_uma_imagem">Manipulando pixels em uma imagem</h2>
+<h2 id="_unidade_1">Unidade 1</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_manipulando_pixels_em_uma_imagem">Manipulando pixels em uma imagem</h3>
 <div class="paragraph">
 <div class="title">Exercício 1</div>
 <p>Esse programa deverá solicitar ao usuário as coordenadas de dois pontos P1 e P2 localizados dentro dos limites do tamanho da imagem e exibir que lhe for fornecida. Entretanto, a região definida pelo retângulo de vértices opostos definidos pelos pontos P1 e P2 será exibida com o negativo da imagem na região correspondente.</p>
@@ -604,10 +617,8 @@ int main(int, char**){
 <div class="title">Figure 2. Saída do programa trocaderegioes.cpp</div>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_preenchendo_regiões">Preenchendo regiões</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_preenchendo_regiões">Preenchendo regiões</h3>
 <div class="paragraph">
 <div class="title">Exercício 3</div>
 <p>No exercício 3 inicialmente é solicitado a melhoria de um programa, que se encontra no roteiro da atividade, que conte mais que 255 objetos na imagem e para isso é feito um contador que conta quantas vezes ele passou de 254, pois assim, é possível encontrar o objeto se você buscar na mesma ordem que identificar.</p>
@@ -737,10 +748,8 @@ int main(int argc, char** argv){
 <div class="title">Figure 3. Saída do programa labeling.cpp</div>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_manipulação_de_histogramas">Manipulação de histogramas</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_manipulação_de_histogramas">Manipulação de histogramas</h3>
 <div class="ulist">
 <div class="title">Exercício 4</div>
 <ul>
@@ -846,11 +855,569 @@ int main(int argc, char** argv){
 <div class="title">Figure 5. Saída do programa equalize.cpp</div>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_filtragem_no_domínio_espacial_i">Filtragem no domínio espacial I</h3>
+<div class="paragraph">
+<div class="title">Exercício 5</div>
+<p>O exercício solicita que a partir de um programa base fornecido no roteiro da atividade como referência, implemente um outro programa <a href="codigos/laplgauss.cpp">laplgauss.cpp</a>. O programa deverá acrescentar mais uma funcionalidade ao exemplo fornecido, permitindo que seja calculado o laplaciano do gaussiano das imagens capturadas.</p>
+</div>
+<div class="paragraph">
+<p>Para isso, foi adicionado ao código mais uma opção no switch no qual ao ser selecionada passara o filtro gaussiano e em seguida o laplaciano. Para a criação dessa lógica foi necessário fazer uma variável boleana que salve o estado se é para passar o filtro laplaciano ou não.</p>
+</div>
+<div class="paragraph">
+<p>O código completo se encontra abaixo.</p>
+</div>
+<div class="listingblock">
+<div class="title">laplgauss.cpp</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="cpp">#include &lt;iostream&gt;
+#include &lt;opencv2/opencv.hpp&gt;
+
+using namespace cv;
+using namespace std;
+
+void printmask(Mat &amp;m){
+  for(int i=0; i&lt;m.size().height; i++){
+    for(int j=0; j&lt;m.size().width; j++){
+      cout &lt;&lt; m.at&lt;float&gt;(i,j) &lt;&lt; ",";
+    }
+    cout &lt;&lt; endl;
+  }
+}
+
+void menu(){
+  cout &lt;&lt; "\npressione a tecla para ativar o filtro: \n"
+	"a - calcular modulo\n"
+    "m - media\n"
+    "g - gauss\n"
+    "v - vertical\n"
+	"h - horizontal\n"
+    "l - laplaciano\n"
+    "j - laplaciano do gaussiano\n"
+	"esc - sair\n";
+}
+
+int main(int argvc, char** argv){
+  VideoCapture video;
+  float media[] = {1,1,1,
+				   1,1,1,
+				   1,1,1};
+  float gauss[] = {1,2,1,
+				   2,4,2,
+				   1,2,1};
+  float horizontal[]={-1,0,1,
+					  -2,0,2,
+					  -1,0,1};
+  float vertical[]={-1,-2,-1,
+					0,0,0,
+					1,2,1};
+  float laplacian[]={0,-1,0,
+					 -1,4,-1,
+					 0,-1,0};
+
+  Mat cap, frame, frame32f, frameFiltered;
+  Mat mask(3,3,CV_32F), mask1;
+  Mat result, result1;
+  double width, height, min, max;
+  int absolut;
+  char key;
+
+  video.open(0);
+  if(!video.isOpened())
+    return -1;
+  width=video.get(CV_CAP_PROP_FRAME_WIDTH);
+  height=video.get(CV_CAP_PROP_FRAME_HEIGHT);
+  std::cout &lt;&lt; "largura=" &lt;&lt; width &lt;&lt; "\n";;
+  std::cout &lt;&lt; "altura =" &lt;&lt; height&lt;&lt; "\n";;
+
+  namedWindow("filtroespacial",1);
+
+  mask = Mat(3, 3, CV_32F, media);
+  scaleAdd(mask, 1/9.0, Mat::zeros(3,3,CV_32F), mask1);
+  swap(mask, mask1);
+  absolut=1; // calcs abs of the image
+  bool laplaciano = false;
+  menu();
+  for(;;){
+    video &gt;&gt; cap;
+    cvtColor(cap, frame, CV_BGR2GRAY);
+    flip(frame, frame, 1);
+    imshow("original", frame);
+    frame.convertTo(frame32f, CV_32F);
+    filter2D(frame32f, frameFiltered,
+			 frame32f.depth(), mask, Point(1,1), 0);
+
+    if(laplaciano){
+      mask = Mat(3, 3, CV_32F, laplacian);
+      filter2D(frameFiltered, frameFiltered,
+			 frameFiltered.depth(), mask, Point(1,1), 0);
+      //printmask(mask);
+    }
+    if(absolut){
+      frameFiltered=abs(frameFiltered);
+    }
+    frameFiltered.convertTo(result, CV_8U);
+    imshow("filtroespacial", result);
+    key = (char) waitKey(10);
+    if( key == 27 ) break; // esc pressed!
+    switch(key){
+    case 'a':
+	  menu();
+      absolut=!absolut;
+      laplaciano = false;
+      break;
+    case 'm':
+	  menu();
+      mask = Mat(3, 3, CV_32F, media);
+      scaleAdd(mask, 1/9.0, Mat::zeros(3,3,CV_32F), mask1);
+      mask = mask1;
+      printmask(mask);
+      laplaciano = false;
+      break;
+    case 'g':
+	  menu();
+      mask = Mat(3, 3, CV_32F, gauss);
+      scaleAdd(mask, 1/16.0, Mat::zeros(3,3,CV_32F), mask1);
+      mask = mask1;
+      printmask(mask);
+      laplaciano = false;
+      break;
+    case 'h':
+	  menu();
+      mask = Mat(3, 3, CV_32F, horizontal);
+      printmask(mask);
+      laplaciano = false;
+      break;
+    case 'v':
+	  menu();
+      mask = Mat(3, 3, CV_32F, vertical);
+      printmask(mask);
+      laplaciano = false;
+      break;
+    case 'l':
+	  menu();
+      mask = Mat(3, 3, CV_32F, laplacian);
+      printmask(mask);
+      laplaciano = false;
+      break;
+    case 'j':
+	menu();
+      mask = Mat(3, 3, CV_32F, gauss);
+      scaleAdd(mask, 1/16.0, Mat::zeros(3,3,CV_32F), mask1);
+      mask = mask1;
+      laplaciano = true;
+      break;
+    default:
+      break;
+    }
+  }
+  return 0;
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_unidade_2">Unidade 2</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_filtragem_no_domínio_da_frequência">Filtragem no domínio da frequência</h3>
+<div class="paragraph">
+<div class="title">Exercício 7</div>
+<p>A partir do programa <a href="codigos/dft.cpp">dft.cpp</a>, fornecido no roteiro da atividade, foi proposto a implementação de um filtro homomórfico, que tem como objetivo corrigir a iluminação em imagens irregulares.</p>
+</div>
+<div class="paragraph">
+<p>Sabemos que a imagem é composta  por duas funções de iluminação e reflectância, sabemos também que a iluminação possui uma variação sutil, assim, a mesma é representada pelas componentes de baixa frequência. Sabendo disso, o filtro homomórfico consiste em separar as componentes de iluminação e reflectância, remover essas componentes de baixa frequência a fim de melhorar a iluminação da imagem. Para isso, fazemos o logaritmo da imagem, a fim de separar iluminação e reflectancia, levamos a imagem para o domínio da frequência, removemos as componentes de baixa frequência utilizando o filtro homomórfico e realizamos a transformada inversa e tiramos a exponencial para remover o logaritmo.</p>
+</div>
+<div class="paragraph">
+<p>O código se encontra todo comentado e explicando o passo a passo da implementação.</p>
+</div>
+<div class="paragraph">
+<p>O código <a href="codigos/fHomomorfico.cpp">fHomomorfico.cpp</a> completo se encontra abaixo.</p>
+</div>
+<div class="listingblock">
+<div class="title">fHomomorfico.cpp</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="cpp">#include &lt;iostream&gt;
+#include &lt;opencv2/opencv.hpp&gt;
+#include &lt;opencv2/imgproc/imgproc.hpp&gt;
+
+#define RADIUS 20
+
+using namespace cv;
+using namespace std;
+
+  // definindo variaveis como globais -----------------------------
+Mat imaginaryInput, complexImage, multsp;
+  Mat padded, filter, mag;
+  Mat image, tmp;
+  Mat_&lt;float&gt; realInput, zeros;
+  vector&lt;Mat&gt; planos;
+  int gammaL, gammaH, sharpC, cutoff;
+
+  // valor do ruido
+  float mean;
+
+  // guarda tecla capturada
+  char key;
+
+  // valores ideais dos tamanhos da imagem
+  // para calculo da DFT
+  int dft_M, dft_N;
+
+
+  // inicializa as variaveis dos sliders
+int gammaL_slider = 9, gammaH_slider = 34, sharpC_slider = 53, cutoff_slider = 16;
+const int gammaL_max = 10, gammaH_max = 50, sharpC_max = 100, cutoff_max = 200;
+// -----------------------------------------------------
+
+
+// troca os quadrantes da imagem da DFT
+void deslocaDFT(Mat&amp; image ){
+  Mat tmp, A, B, C, D;
+
+  // se a imagem tiver tamanho impar, recorta a regiao para
+  // evitar cópias de tamanho desigual
+  image = image(Rect(0, 0, image.cols &amp; -2, image.rows &amp; -2));
+  int cx = image.cols/2;
+  int cy = image.rows/2;
+
+  // reorganiza os quadrantes da transformada
+  // A B   -&gt;  D C
+  // C D       B A
+  A = image(Rect(0, 0, cx, cy));
+  B = image(Rect(cx, 0, cx, cy));
+  C = image(Rect(0, cy, cx, cy));
+  D = image(Rect(cx, cy, cx, cy));
+
+  // A &lt;-&gt; D
+  A.copyTo(tmp);  D.copyTo(A);  tmp.copyTo(D);
+
+  // C &lt;-&gt; B
+  C.copyTo(tmp);  B.copyTo(C);  tmp.copyTo(B);
+}
+
+// função que prepara o filtro homomorfico baseado nos parametros gl, gh, c, d0
+Mat homomorphicFilter(double gl, double gh, double c, double d0){
+  Mat filter = Mat(padded.size(), CV_32FC2, Scalar(0));
+  Mat tmp = Mat(dft_M, dft_N, CV_32F);
+
+  for(int i=0; i&lt;dft_M; i++){
+    for(int j=0; j&lt;dft_N; j++){
+      tmp.at&lt;float&gt; (i,j) = (gh - gl)*(1 - exp(-c*(( (i-dft_M/2)*(i-dft_M/2) + (j-dft_N/2)*(j-dft_N/2) ) / (d0*d0) ))) + gl;
+    }
+  }
+
+  Mat comps[]= {tmp,tmp};
+  merge(comps, 2, filter);
+  return filter;
+}
+
+Mat filtragemHomomorfica(){
+
+    // realiza o padding da imagem
+    copyMakeBorder(image, padded, 0,
+                   dft_M - image.rows, 0,
+                   dft_N - image.cols,
+                   BORDER_CONSTANT, Scalar::all(0));
+
+    // limpa o array de matrizes que vao compor a
+    // imagem complexa
+    planos.clear();
+    // cria a compoente real
+    realInput = Mat_&lt;float&gt;(padded);
+
+    // adiciona 1 a cada pixel da imagem para não haver log de 0
+    realInput += Scalar::all(1);
+
+    // realiza o log da imagem
+    log(realInput,realInput);
+
+    // insere as duas componentes no array de matrizes
+    planos.push_back(realInput);
+    planos.push_back(zeros);
+
+    // combina o array de matrizes em uma unica
+    // componente complexa
+    merge(planos, complexImage);
+
+    // calcula o dft
+    dft(complexImage, complexImage);
+
+    // realiza a troca de quadrantes
+    deslocaDFT(complexImage);
+
+    // filtro homomorfico
+    Mat filter = homomorphicFilter(gammaL,gammaH,sharpC,cutoff);
+
+    // aplica o filtro homomorfico
+    mulSpectrums(complexImage,filter,complexImage,0);
+
+    // limpa o array de planos
+    planos.clear();
+    // separa as partes real e imaginaria para modifica-las
+    split(complexImage, planos);
+
+    // recompoe os planos em uma unica matriz complexa
+    merge(planos, complexImage);
+
+    // troca novamente os quadrantes
+    deslocaDFT(complexImage);
+
+
+    // calcula a DFT inversa
+    idft(complexImage, complexImage);
+
+    // limpa o array de planos
+    planos.clear();
+
+    // separa as partes real e imaginaria da
+    // imagem filtrada
+    split(complexImage, planos);
+
+    // normaliza a parte real para exibicao
+    normalize(planos[0], planos[0], 0, 1, CV_MINMAX);
+    return planos[0];
+}
+void on_trackbar(int, void*){
+  gammaL = (double) gammaL_slider/10;
+  gammaH = (double) gammaH_slider/10;
+  sharpC = (double) sharpC_slider;
+  cutoff = (double) cutoff_slider;
+  tmp = filtragemHomomorfica();
+  imshow("Filtrada", tmp);
+}
+int main(int argc, char** argv){
+
+  namedWindow("Filtrada", WINDOW_KEEPRATIO);
+  namedWindow("Original", WINDOW_KEEPRATIO);
+
+  // ler a imagem
+  image = imread(argv[1], CV_LOAD_IMAGE_GRAYSCALE);
+
+  imshow("Original",image);
+
+  // identifica os tamanhos otimos para
+  // calculo do FFT
+  dft_M = getOptimalDFTSize(image.rows);
+  dft_N = getOptimalDFTSize(image.cols);
+
+  // realiza o padding da imagem
+  copyMakeBorder(image, padded, 0,
+                 dft_M - image.rows, 0,
+                 dft_N - image.cols,
+                 BORDER_CONSTANT, Scalar::all(0));
+
+  // parte imaginaria da matriz complexa (preenchida com zeros)
+  zeros = Mat_&lt;float&gt;::zeros(padded.size());
+
+  // prepara a matriz complexa para ser preenchida
+  complexImage = Mat(padded.size(), CV_32FC2, Scalar(0));
+
+  // a função de transferência (filtro frequencial) deve ter o
+  // mesmo tamanho e tipo da matriz complexa
+  filter = complexImage.clone();
+
+  // cria uma matriz temporária para criar as componentes real
+  // e imaginaria do filtro ideal
+  tmp = Mat(dft_M, dft_N, CV_32F);
+
+  // cria a matriz com as componentes do filtro e junta
+  // ambas em uma matriz multicanal complexa
+  Mat comps[]= {tmp, tmp};
+  merge(comps, 2, filter);
+
+  char Name[50];
+
+  sprintf( Name, "Gamma L x %d", gammaL_max );
+  createTrackbar( Name, "Filtrada", &amp;gammaL_slider, gammaL_max, on_trackbar);
+
+  sprintf( Name, "Gamma H x %d", gammaH_max );
+  createTrackbar( Name, "Filtrada", &amp;gammaH_slider, gammaH_max, on_trackbar);
+
+  sprintf( Name, "C x %d", sharpC_max );
+  createTrackbar( Name, "Filtrada", &amp;sharpC_slider, sharpC_max, on_trackbar);
+
+  sprintf( Name, "Cutoff Frequency x %d", cutoff_max );
+  createTrackbar( Name, "Filtrada", &amp;cutoff_slider, cutoff_max, on_trackbar);
+
+
+  waitKey(0);
+  return 0;
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Abaixo segue o resultado do código para a figura <a href="images/biel.png">biel.png</a>, que também se encontra no roteiro da atividade, com os parametros gammaL = 5, gammaH = 10, sharpC = 43 e cutoff = 9.</p>
+</div>
+<div id="figex6" class="imageblock">
+<div class="content">
+<img src="images/fhomomorfico.png" alt="fhomomorfico">
+</div>
+<div class="title">Figure 6. Saída do programa fHomomorfico.cpp</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_pontilhismo">Pontilhismo</h3>
+<div class="paragraph">
+<div class="title">Exercício 8</div>
+<p>Nesse exercício foi prosposto utilizar o código <a href="codigos/canny.cpp">canny.cpp</a>, fornecido no roteiro da atividade, para aprimorar o código <a href="codigos/pontilhismo.cpp">pontilhismo.cpp</a> e gerar uma imagem pontilhista artificial melhorada.</p>
+</div>
+<div class="paragraph">
+<p>Para isso, eu utilizei a imagem gerada pelo código canny com vários limiares, e percorria esse imagem percebendo onde havia transição de pixel, ou seja, borda. A medida que o limiar ia aumentado eu ia aumentando o tamanho do raio a ser desenhado. O que eu fiz, foi um aprimoramento do código, assim adicionando ao código pontilhismo essa operação.</p>
+</div>
+<div class="listingblock">
+<div class="title">Parte Adicionada ao Código</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="cpp">  imwrite("pontosantes.jpg", points);
+  int intervalos[5] = {5, 50, 500, 550, 600};
+    for(int k = 0; k&lt;5; k++){
+      Canny(image, border, intervalos[k], 3*intervalos[k]);
+        for(int i=0;i&lt;height;i++){
+          for(int j=1;j&lt;width;j++){
+	    if (border.at&lt;uchar&gt;(j,i) == 255 and border.at&lt;uchar&gt;(j-1,i) == 0){
+		    gray = image.at&lt;uchar&gt;(j,i);
+		    circle(points,
+		      cv::Point(i,j),
+			     k+1,
+			     CV_RGB(gray,gray,gray),
+			     -1,
+			     CV_AA);
+	     }
+          }
+       }
+    }</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Caso queira modificar os limiares do algoritmo canny, basta modificar o array "intervalos", que possui cinco posições cada posição representa o valor do raio da bola (1[primeira],2,3,4,5[última]).</p>
+</div>
+<div class="paragraph">
+<p>O código <a href="codigos/cannypoints.cpp">cannypoints.cpp</a> completo se encontra abaixo.</p>
+</div>
+<div class="listingblock">
+<div class="title">cannypoints.cpp</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="cpp">#include &lt;iostream&gt;
+#include &lt;opencv2/opencv.hpp&gt;
+#include &lt;fstream&gt;
+#include &lt;iomanip&gt;
+#include &lt;vector&gt;
+#include &lt;algorithm&gt;
+#include &lt;numeric&gt;
+#include &lt;ctime&gt;
+#include &lt;cstdlib&gt;
+
+using namespace std;
+using namespace cv;
+
+#define STEP 3
+#define JITTER 5
+#define RAIO 3
+
+int main(int argc, char** argv){
+  vector&lt;int&gt; yrange;
+  vector&lt;int&gt; xrange;
+
+  Mat image, frame, points, border;
+
+  int width, height, gray;
+  int x, y;
+
+  image= imread(argv[1],CV_LOAD_IMAGE_GRAYSCALE);
+
+  srand(time(0));
+
+  if(!image.data){
+	cout &lt;&lt; "nao abriu" &lt;&lt; argv[1] &lt;&lt; endl;
+    cout &lt;&lt; argv[0] &lt;&lt; " imagem.jpg";
+    exit(0);
+  }
+
+  width=image.size().width;
+  height=image.size().height;
+
+  xrange.resize(height/STEP);
+  yrange.resize(width/STEP);
+
+  iota(xrange.begin(), xrange.end(), 0);
+  iota(yrange.begin(), yrange.end(), 0);
+
+  for(uint i=0; i&lt;xrange.size(); i++){
+    xrange[i]= xrange[i]*STEP+STEP/2;
+  }
+
+  for(uint i=0; i&lt;yrange.size(); i++){
+    yrange[i]= yrange[i]*STEP+STEP/2;
+  }
+
+  points = Mat(height, width, CV_8U, Scalar(255));
+
+  random_shuffle(xrange.begin(), xrange.end());
+
+  for(auto i : xrange){
+    random_shuffle(yrange.begin(), yrange.end());
+    for(auto j : yrange){
+      x = i+rand()%(2*JITTER)-JITTER+1;
+      y = j+rand()%(2*JITTER)-JITTER+1;
+      gray = image.at&lt;uchar&gt;(x,y);
+      circle(points,
+             cv::Point(y,x),
+             RAIO,
+             CV_RGB(gray,gray,gray),
+             -1,
+             CV_AA);
+    }
+  }
+  imwrite("pontosantes.jpg", points);
+  int intervalos[5] = {5, 50, 500, 550, 600};
+    for(int k = 0; k&lt;5; k++){
+      Canny(image, border, intervalos[k], 3*intervalos[k]);
+        for(int i=0;i&lt;height;i++){
+          for(int j=1;j&lt;width;j++){
+	    if (border.at&lt;uchar&gt;(j,i) == 255 and border.at&lt;uchar&gt;(j-1,i) == 0){
+		    gray = image.at&lt;uchar&gt;(j,i);
+		    circle(points,
+		      cv::Point(i,j),
+			     k+1,
+			     CV_RGB(gray,gray,gray),
+			     -1,
+			     CV_AA);
+	     }
+          }
+       }
+    }
+  imwrite("pontos.jpg", points);
+  return 0;
+}</code></pre>
+</div>
+</div>
+<div id="figex7" class="imageblock">
+<div class="content">
+<img src="images/floresta.jpg" alt="floresta">
+</div>
+<div class="title">Figure 7. Saída do programa fHomomorfico.cpp</div>
+</div>
+<div id="figex8" class="imageblock">
+<div class="content">
+<img src="images/pontosantes.jpg" alt="pontosantes">
+</div>
+<div class="title">Figure 8. Saída do programa pontilhismo.cpp</div>
+</div>
+<div id="figex9" class="imageblock">
+<div class="content">
+<img src="images/pontos.jpg" alt="pontos">
+</div>
+<div class="title">Figure 9. Saída do programa cannypoints.cpp</div>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-09-10 10:09:11 -03
+Last updated 2019-11-06 19:36:30 -03
 </div>
 </div>
 <script type="text/x-mathjax-config">
